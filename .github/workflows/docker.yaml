@@ -20,9 +20,9 @@ jobs:
           password: ${{ secrets.CR_PAT }}
       - name: Build container image
         run:
-          docker build -t ghcr.io/${{ github.repository_owner }}/hello:$VERSION .
+          docker build -t ghcr.io/${{ github.repository_owner }}/forestry-server:$VERSION .
       - name: Push container image
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/hello:$VERSION
-          docker tag ghcr.io/${{ github.repository_owner }}/hello:$VERSION ghcr.io/${{ github.repository_owner }}/hello:latest
-          docker push ghcr.io/${{ github.repository_owner }}/hello:latest
+          docker push ghcr.io/${{ github.repository_owner }}/forestry-server:$VERSION
+          docker tag ghcr.io/${{ github.repository_owner }}/forestry-server:$VERSION ghcr.io/${{ github.repository_owner }}/forestry-server:latest
+          docker push ghcr.io/${{ github.repository_owner }}/forestry-server:latest
