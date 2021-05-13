@@ -1,0 +1,28 @@
+name: Container
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set environment
+        shell: bash
+        run: echo "::set-env name=VERSION::$( echo ${GITHUB_REF:10})"
+      - uses: docker/login-action@v1
+        name: Login to GitHub Container Registry
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build container image
+        run:
+          docker build -t ghcr.io/${{ github.repository_owner }}/hello:$VERSION .
+      - name: Push container image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/hello:$VERSION
+          docker tag ghcr.io/${{ github.repository_owner }}/hello:$VERSION ghcr.io/${{ github.repository_owner }}/hello:latest
+          docker push ghcr.io/${{ github.repository_owner }}/hello:latest
