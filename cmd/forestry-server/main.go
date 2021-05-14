@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/guni1192/forestry/pkg/api"
 )
 
 func main() {
-	fmt.Println("Hello world")
+	e := api.NewRouter(true)
+	e.Logger.Fatal(e.Start(":1192"))
 }
