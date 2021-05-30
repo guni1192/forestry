@@ -9,3 +9,5 @@ Distributed Logging Platform
 
 **Note**: This repository is created for demonstration.
 We not assumption for production environment.
+
+![](figs/architecture.png)
