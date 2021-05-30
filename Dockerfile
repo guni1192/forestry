@@ -1,8 +1,11 @@
-FROM golang:1.15-alpine3.12 as builder
+FROM golang:1.16.4-buster as builder
 
 WORKDIR /src
 
-RUN apk add --no-cache make
+RUN apt-get update -y && \
+    apt-get install make && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.mod
 COPY go.sum go.sum
@@ -12,8 +15,8 @@ COPY . /src
 
 RUN make build
 
-FROM alpine:3.12 as runner
+FROM gcr.io/distroless/base-debian10
 
-COPY --from=builder /src/bin/forestry-server /usr/local/bin
+COPY --from=builder /src/bin/forestry-server /forestry-server
 
-ENTRYPOINT ["forestry-server"]
+ENTRYPOINT ["/forestry-server"]
