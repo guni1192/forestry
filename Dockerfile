@@ -13,7 +13,8 @@ RUN go mod download
 
 COPY . /src
 
-RUN make build
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    make build
 
 FROM gcr.io/distroless/base-debian10
 
