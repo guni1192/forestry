@@ -5,6 +5,10 @@ import (
 )
 
 func main() {
-	e := api.NewRouter(true)
-	e.Logger.Fatal(e.Start(":1192"))
+	s := api.NewServer(true)
+
+	s.GET("/health", api.Health)
+	s.POST("/api/loki/v1/push", api.Health)
+
+	s.Logger.Fatal(s.Start(":1192"))
 }
