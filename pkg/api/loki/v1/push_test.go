@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/guni1192/forestry/pkg/api"
+	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,11 +28,16 @@ func (c FakeLokiClient) Push(logData *LogData) error {
 	return nil
 }
 
-func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
+func NewTestServer() *echo.Echo {
 	fakeLokiClient := FakeLokiClient{}
 	logStreamer := NewLogStreamer(&fakeLokiClient)
-	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
+	server := api.NewServer(false)
+	server.POST("/api/loki/v1/push", logStreamer.PushHandler)
+	return server
+}
+
+func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
+	e := NewTestServer()
 
 	logData := NewTestLogData()
 	reqBody, err := json.Marshal(logData)
@@ -43,8 +49,7 @@ func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	rec := httptest.NewRecorder()
-
-	router.ServeHTTP(rec, req)
+	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusCreated, rec.Code)
 
@@ -58,10 +63,7 @@ func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
 }
 
 func TestLokiV1PushHandlerShouldBadRequest(t *testing.T) {
-	fakeLokiClient := FakeLokiClient{}
-	logStreamer := NewLogStreamer(&fakeLokiClient)
-	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
+	e := NewTestServer()
 
 	dummy, err := json.Marshal(map[string]string{"dummy": "data"})
 	if err != nil {
@@ -73,7 +75,7 @@ func TestLokiV1PushHandlerShouldBadRequest(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router.ServeHTTP(rec, req)
+	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 
@@ -88,10 +90,7 @@ func TestLokiV1PushHandlerShouldBadRequest(t *testing.T) {
 
 // Unset Content-Type: application/json
 func TestLokiV1PushHandlerShouldUnsupportedMediaType(t *testing.T) {
-	fakeLokiClient := FakeLokiClient{}
-	logStreamer := NewLogStreamer(&fakeLokiClient)
-	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
+	e := NewTestServer()
 
 	dummy, err := json.Marshal(map[string]string{"dummy": "data"})
 	if err != nil {
@@ -101,7 +100,7 @@ func TestLokiV1PushHandlerShouldUnsupportedMediaType(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/loki/v1/push", bytes.NewBuffer(dummy))
 	rec := httptest.NewRecorder()
 
-	router.ServeHTTP(rec, req)
+	e.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusUnsupportedMediaType, rec.Code)
 
@@ -112,5 +111,4 @@ func TestLokiV1PushHandlerShouldUnsupportedMediaType(t *testing.T) {
 	}
 
 	assert.Equal(t, "code=415, message=Unsupported Media Type", body["message"])
-
 }
