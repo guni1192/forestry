@@ -21,9 +21,17 @@ func NewTestLogData() LogData {
 	return LogData{Streams: []Stream{stream}}
 }
 
+type FakeLokiClient struct{}
+
+func (c FakeLokiClient) Push(logData *LogData) error {
+	return nil
+}
+
 func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
+	fakeLokiClient := FakeLokiClient{}
+	logStreamer := NewLogStreamer(&fakeLokiClient)
 	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", PushHandler)
+	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
 
 	logData := NewTestLogData()
 	reqBody, err := json.Marshal(logData)
@@ -50,8 +58,10 @@ func TestLokiV1PushHandlerShouldCreated(t *testing.T) {
 }
 
 func TestLokiV1PushHandlerShouldBadRequest(t *testing.T) {
+	fakeLokiClient := FakeLokiClient{}
+	logStreamer := NewLogStreamer(&fakeLokiClient)
 	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", PushHandler)
+	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
 
 	dummy, err := json.Marshal(map[string]string{"dummy": "data"})
 	if err != nil {
@@ -78,8 +88,10 @@ func TestLokiV1PushHandlerShouldBadRequest(t *testing.T) {
 
 // Unset Content-Type: application/json
 func TestLokiV1PushHandlerShouldUnsupportedMediaType(t *testing.T) {
+	fakeLokiClient := FakeLokiClient{}
+	logStreamer := NewLogStreamer(&fakeLokiClient)
 	router := api.NewServer(false)
-	router.POST("/api/loki/v1/push", PushHandler)
+	router.POST("/api/loki/v1/push", logStreamer.PushHandler)
 
 	dummy, err := json.Marshal(map[string]string{"dummy": "data"})
 	if err != nil {
