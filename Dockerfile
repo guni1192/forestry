@@ -1,3 +1,5 @@
+ARG TARGET=forestry-server
+
 FROM golang:1.16.4-buster as builder
 
 WORKDIR /src
@@ -18,6 +20,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM gcr.io/distroless/base-debian10
 
-COPY --from=builder /src/bin/forestry-server /forestry-server
+COPY --from=builder /src/bin/* /
 
-ENTRYPOINT ["/forestry-server"]
+CMD ["/forestry-server"]

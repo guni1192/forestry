@@ -35,9 +35,11 @@ func (c ForestryLokiClient) Push(logData *LogData) error {
 	if err != nil {
 		return fmt.Errorf("Failed to marshal json data: %w", err)
 	}
-	resp, err := http.Post(c.LokiHost, "application/json", bytes.NewBuffer(data))
+
+	url := fmt.Sprintf("%s/loki/api/v1/push", c.LokiHost)
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return fmt.Errorf("POST %s failed: %w", c.LokiHost, err)
+		return fmt.Errorf("POST %s failed: %w", url, err)
 	}
 	defer resp.Body.Close()
 
