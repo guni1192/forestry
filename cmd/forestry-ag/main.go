@@ -35,7 +35,12 @@ var (
 				return errors.New("Please specify --log-file")
 			}
 
-			err = run(forestryHost, logPath)
+			appName, err := cmd.Flags().GetString("app-name")
+			if err != nil {
+				return fmt.Errorf("Failed to get --app-name: %w", err)
+			}
+
+			err = run(forestryHost, logPath, appName)
 			if err != nil {
 				return fmt.Errorf("Failed to run: %w", err)
 			}
@@ -47,11 +52,13 @@ var (
 
 type forestryClient struct {
 	forestryHost string
+	appName      string
 }
 
 func init() {
 	rootCommand.PersistentFlags().StringP("forestry-host", "", "http://localhost:1192", "Forestry hostname")
 	rootCommand.PersistentFlags().StringP("log-file", "f", "", "target log file")
+	rootCommand.PersistentFlags().StringP("app-name", "a", "", "monitoring logging target app name")
 }
 
 func (c *forestryClient) send(message string) error {
@@ -67,7 +74,7 @@ func (c *forestryClient) send(message string) error {
 	}
 
 	stream := lokiV1.Stream{
-		Stream: map[string]string{"hostname": hostname},
+		Stream: map[string]string{"hostname": hostname, "app-name": c.appName, "log-driver": "forestry"},
 		Values: values,
 	}
 
@@ -109,7 +116,7 @@ func (c *forestryClient) tail(file io.Reader) error {
 	}
 }
 
-func run(forestryHost string, logPath string) error {
+func run(forestryHost string, logPath string, appName string) error {
 	f, err := os.Open(logPath)
 	defer func() {
 		err = f.Close()
