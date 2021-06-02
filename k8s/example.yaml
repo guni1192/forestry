@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: log-dir
+      - name: forestry-server
+        image: guni1192/forestry:dev
+        imagePullPolicy: IfNotPresent
+        command: ["/forestry-ag", "-f", "/var/log/nginx/access.log", "--forestry-host", "http://forestry:1192"]
+        volumeMounts:
+        - mountPath: /var/log/nginx
+          name: log-dir
+          readOnly: true
+      volumes:
+      - name: log-dir
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forestry
+spec:
+  selector:
+    matchLabels:
+      app: forestry
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: forestry
+    spec:
+      containers:
+      - name: forestry
+        image: guni1192/forestry:dev
+        imagePullPolicy: IfNotPresent
+        command: ["/forestry-server", "--loki-host", "http://loki:3100"]
+      volumes:
+      - name: log-dir
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: forestry
+spec:
+  type: ClusterIP
+  selector:
+    app: forestry
+  ports:
+  - protocol: TCP
+    port: 1192
+    targetPort: 1192
