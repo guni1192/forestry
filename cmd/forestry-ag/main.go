@@ -22,16 +22,23 @@ var (
 		Short: "forestry agent program",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			forestryHost, err := cmd.Flags().GetString("forestry-host")
-			logPath, err := cmd.Flags().GetString("log-file")
 			if err != nil {
 				return err
+			}
+
+			logPath, err := cmd.Flags().GetString("log-file")
+			if err != nil {
+				return fmt.Errorf("Failed to get --log-file: %w", err)
 			}
 
 			if logPath == "" {
 				return errors.New("Please specify --log-file")
 			}
 
-			run(forestryHost, logPath)
+			err = run(forestryHost, logPath)
+			if err != nil {
+				return fmt.Errorf("Failed to run: %w", err)
+			}
 
 			return nil
 		},
@@ -92,8 +99,8 @@ func (c *forestryClient) tail(file io.Reader) error {
 			return fmt.Errorf("Failed to read buffer: %w", err)
 		}
 		if len(bytes) != 0 {
-			if err != nil {
-				c.send(string(bytes))
+			if err == nil {
+				return c.send(string(bytes))
 			}
 		}
 		if err == io.EOF {
@@ -104,14 +111,21 @@ func (c *forestryClient) tail(file io.Reader) error {
 
 func run(forestryHost string, logPath string) error {
 	f, err := os.Open(logPath)
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error occuered since closing %s: %v", logPath, err)
+			os.Exit(1)
+		}
+	}()
+
 	if err != nil {
 		return fmt.Errorf("Failed to open log data %w", err)
 	}
 
 	c := forestryClient{forestryHost: forestryHost}
 
-	c.tail(f)
+	err = c.tail(f)
 	if err != nil {
 		return fmt.Errorf("Failed to tail log data %w", err)
 	}
@@ -121,7 +135,7 @@ func run(forestryHost string, logPath string) error {
 
 func main() {
 	if err := rootCommand.Execute(); err != nil {
-		fmt.Fprintln(os.Stdout, err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
