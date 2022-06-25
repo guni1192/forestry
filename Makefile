@@ -36,3 +36,6 @@ docker-run:
 docker-stop:
 	docker stop $(shell cat /tmp/forestry-dev-server)
 	rm -rf /tmp/forestry-dev-server
+
+deploy:
+	kubectl apply -f k8s/

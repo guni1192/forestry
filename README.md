@@ -19,21 +19,30 @@ We not assumption for production environment.
 - minikube(docker driver)
 - kubectl
 
-```
+```console
 minikube start
+eval $(minikube docker-env)
 kubectl get node -o wide
 ```
 
 ### Setup Grafana Loki
 
-```
+```console
+helm repo add grafana https://grafana.github.io/helm-charts
 helm upgrade --install loki grafana/loki-stack --set grafana.enabled=true
 kubectl get secret loki-grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 ```
 
+### Build and Deploy forestry
+
+```console
+make docker-build
+make deploy
+```
+
 ### Port-Forward
 
-```
+```console
 kubectl port-forward service/loki-grafana 3000:80 --address 0.0.0.0
 ```
 
