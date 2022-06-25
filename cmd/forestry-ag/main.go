@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"fmt"
 	"io"
 	"net/http"
@@ -107,7 +108,10 @@ func (c *forestryClient) tail(file io.Reader) error {
 		}
 		if len(bytes) != 0 {
 			if err == nil {
-				return c.send(string(bytes))
+				err = c.send(string(bytes))
+				if err != nil {
+					log.Printf("%s", err)
+				}
 			}
 		}
 		if err == io.EOF {

@@ -18,7 +18,7 @@ spec:
         volumeMounts:
         - mountPath: /var/log/nginx
           name: log-dir
-      - name: forestry-server
+      - name: forestry-ag
         image: guni1192/forestry:dev
         imagePullPolicy: IfNotPresent
         command: ["/forestry-ag", "-f", "/var/log/nginx/access.log", "--forestry-host", "http://forestry:1192"]
@@ -46,19 +46,19 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: forestry
+  name: forestry-server
 spec:
   selector:
     matchLabels:
-      app: forestry
+      app: forestry-server
   replicas: 1
   template:
     metadata:
       labels:
-        app: forestry
+        app: forestry-server
     spec:
       containers:
-      - name: forestry
+      - name: forestry-server
         image: guni1192/forestry:dev
         imagePullPolicy: IfNotPresent
         command: ["/forestry-server", "--loki-host", "http://loki:3100"]
